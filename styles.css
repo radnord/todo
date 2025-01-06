@@ -1,0 +1,311 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+body {
+    background: #0f0f13;
+    color: #e0e0e0;
+    padding: 2rem;
+    min-height: 100vh;
+}
+
+.container {
+    padding-left: 2rem;
+    width: min(100%, 900px);
+}
+
+.buttons-container {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.control-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: #2a2a35;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.95rem;
+    transition: background-color 0.2s ease;
+}
+
+.control-button:hover {
+    background: #35354a;
+}
+
+.import-input {
+    display: none;
+}
+
+.message-modal {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #2a2a35;
+    border-radius: 6px;
+    padding: 1rem;
+    color: #fff;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.message-modal.visible {
+    opacity: 1;
+}
+
+.tree-list {
+    list-style: none;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.tree-item {
+    position: relative;
+    margin: 0.3rem 0;
+    border-radius: 6px;
+}
+
+.nested {
+    position: relative;
+    padding-left: 1.5rem;
+    display: none;
+}
+
+.nested::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1px;
+    height: 100%;
+    background: #2a2a35;
+}
+
+.nested .tree-item::before {
+    content: '';
+    position: absolute;
+    left: -1.5rem;
+    top: 20px;
+    width: 1.5rem;
+    height: 1px;
+    background: #2a2a35;
+}
+
+.tree-item.expanded > .nested {
+    display: block;
+}
+
+.tree-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: #1a1a23;
+    border-radius: 6px;
+    border: 1px solid #2a2a35;
+    min-height: 40px;
+    position: relative;
+    transition: background-color 0.2s ease;
+}
+
+.tree-list > .tree-item > .tree-content { background: #1a1a23; }
+.nested > .tree-item > .tree-content { background: #222233; }
+.nested .nested > .tree-item > .tree-content { background: #2a2a43; }
+.nested .nested .nested > .tree-item > .tree-content { background: #323253; }
+.nested .nested .nested .nested > .tree-item > .tree-content { background: #3a3a63; }
+.nested .nested .nested .nested .nested > .tree-item > .tree-content { background: #424273; }
+.nested .nested .nested .nested .nested .nested > .tree-item > .tree-content { background: #4a4a83; }
+.nested .nested .nested .nested .nested .nested .nested > .tree-item > .tree-content { background: #525293; }
+.nested .nested .nested .nested .nested .nested .nested .nested > .tree-item > .tree-content { background: #5a5aa3; }
+.nested .nested .nested .nested .nested .nested .nested .nested .nested > .tree-item > .tree-content { background: #6262b3; }
+
+.tree-content:hover {
+    background: #22222c !important;
+}
+
+.tree-item.focused > .tree-content {
+    border-color: #4a4a5a;
+    background: #22222c !important;
+}
+
+.icon-panel {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    background: #2a2a35;
+    border: 1px solid #4a4a5a;
+    border-radius: 6px;
+    padding: 0.5rem;
+    display: none;
+    flex-direction: row;
+    gap: 0.5rem;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    margin-bottom: 0.5rem;
+}
+
+.icon-panel.visible {
+    display: flex;
+}
+
+.icon-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #1a1a23;
+    border: 1px solid #4a4a5a;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.2s ease;
+}
+
+.icon-btn:hover {
+    background: #35354a;
+    transform: scale(1.1);
+}
+
+.icon-btn.active {
+    background: #4a4a5a;
+    border-color: #6e6e8a;
+}
+
+.toggle-btn {
+    min-width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #6e6e8a;
+    font-size: 1.2rem;
+    padding: 0;
+    margin-top: 3px;
+}
+
+.toggle-btn:hover {
+    color: #fff;
+}
+
+.tree-item-text {
+    flex-grow: 1;
+    min-height: 24px;
+    border: none;
+    background: transparent;
+    color: #e0e0e0;
+    font-size: 0.95rem;
+    padding: 0.25rem 0.5rem;
+    outline: none;
+    resize: none;
+    overflow: hidden;
+    text-align: justify;
+    line-height: 1.5;
+    word-break: break-word;
+    white-space: pre-wrap;
+    font-family: inherit;
+    margin: 0;
+}
+
+.tree-item-text:focus {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+}
+
+.tree-item-text::spelling-error {
+    text-decoration: wavy underline #ff4444;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.3rem;
+    opacity: 0;
+    margin-top: 3px;
+    position: relative;
+}
+
+.tree-content:hover .action-buttons {
+    opacity: 1;
+}
+
+.action-btn {
+    min-width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid #2a2a35;
+    border-radius: 4px;
+    color: #6e6e8a;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 0;
+}
+
+.action-btn:hover:not(:disabled) {
+    background: #2a2a35;
+    color: #fff;
+}
+
+.action-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.action-btn.active {
+    background: #35354a;
+    color: #fff;
+}
+
+.tree-item.expanded > .tree-content > .toggle-btn {
+    transform: rotate(90deg);
+}
+
+.child-indicator {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #4a4a5a;
+    font-size: 1.2rem;
+    display: none;
+}
+
+.tree-item:not(.expanded) > .tree-content > .child-indicator {
+    display: block;
+}
+
+.tree-content:hover > .child-indicator {
+    display: none;
+}
+
+.tree-item.focused > .tree-content > .child-indicator {
+    display: none;
+}
+
+.item-icon {
+    position: absolute;
+    right: 32px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    pointer-events: none;
+}
+
+.tree-content:hover .item-icon {
+    display: none;
+}
