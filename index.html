@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Elegant Tree List</title>
+   <style>
+       * {
+           margin: 0;
+           padding: 0;
+           box-sizing: border-box;
+           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+       }
+
+       body {
+           background: #0f0f13;
+           color: #e0e0e0;
+           padding: 2rem;
+           min-height: 100vh;
+       }
+
+       .container {
+           padding-left: 2rem;
+           width: min(100%, 900px);
+       }
+
+       .buttons-container {
+           display: flex;
+           gap: 1rem;
+           margin: 1rem 0;
+       }
+
+       .control-button {
+           display: inline-flex;
+           align-items: center;
+           gap: 0.5rem;
+           padding: 0.5rem 1rem;
+           background: #2a2a35;
+           border: none;
+           border-radius: 6px;
+           color: #fff;
+           cursor: pointer;
+           font-size: 0.95rem;
+           transition: background-color 0.2s ease;
+       }
+
+       .control-button:hover {
+           background: #35354a;
+       }
+
+       .import-input {
+           display: none;
+       }
+
+       .message-modal {
+           position: fixed;
+           top: 20px;
+           right: 20px;
+           background: #2a2a35;
+           border-radius: 6px;
+           padding: 1rem;
+           color: #fff;
+           z-index: 1000;
+           opacity: 0;
+           transition: opacity 0.3s ease;
+           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+       }
+
+       .message-modal.visible {
+           opacity: 1;
+       }
+
+       .tree-list {
+           list-style: none;
+           padding-left: 1.5rem;
+           position: relative;
+       }
+
+       .tree-item {
+           position: relative;
+           margin: 0.3rem 0;
+           border-radius: 6px;
+       }
+
+       .nested {
+           position: relative;
+           padding-left: 1.5rem;
+           display: none;
+       }
+
+       .nested::before {
+           content: '';
+           position: absolute;
+           left: 0;
+           top: 0;
+           width: 1px;
+           height: 100%;
+           background: #2a2a35;
+       }
+
+       .nested .tree-item::before {
+           content: '';
+           position: absolute;
+           left: -1.5rem;
+           top: 20px;
+           width: 1.5rem;
+           height: 1px;
+           background: #2a2a35;
+       }
+
+       .tree-item.expanded > .nested {
+           display: block;
+       }
+
+       .tree-content {
+           display: flex;
+           align-items: flex-start;
+           gap: 0.5rem;
+           padding: 0.5rem;
+           background: #1a1a23;
+           border-radius: 6px;
+           border: 1px solid #2a2a35;
+           min-height: 40px;
+           position: relative;
+           transition: background-color 0.2s ease;
+       }
+
+       .tree-list > .tree-item > .tree-content { background: #1a1a23; }
+       .nested > .tree-item > .tree-content { background: #222233; }
+       .nested .nested > .tree-item > .tree-content { background: #2a2a43; }
+       .nested .nested .nested > .tree-item > .tree-content { background: #323253; }
+       .nested .nested .nested .nested > .tree-item > .tree-content { background: #3a3a63; }
+       .nested .nested .nested .nested .nested > .tree-item > .tree-content { background: #424273; }
+       .nested .nested .nested .nested .nested .nested > .tree-item > .tree-content { background: #4a4a83; }
+       .nested .nested .nested .nested .nested .nested .nested > .tree-item > .tree-content { background: #525293; }
+       .nested .nested .nested .nested .nested .nested .nested .nested > .tree-item > .tree-content { background: #5a5aa3; }
+       .nested .nested .nested .nested .nested .nested .nested .nested .nested > .tree-item > .tree-content { background: #6262b3; }
+
+       .tree-content:hover {
+           background: #22222c !important;
+       }
+
+       .tree-item.focused > .tree-content {
+           border-color: #4a4a5a;
+           background: #22222c !important;
+       }
+
+       .icon-panel {
+           position: absolute;
+           bottom: 100%;
+           left: 0;
+           background: #2a2a35;
+           border: 1px solid #4a4a5a;
+           border-radius: 6px;
+           padding: 0.5rem;
+           display: none;
+           flex-direction: row;
+           gap: 0.5rem;
+           z-index: 1000;
+           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+           margin-bottom: 0.5rem;
+       }
+
+       .icon-panel.visible {
+           display: flex;
+       }
+
+       .icon-btn {
+           width: 32px;
+           height: 32px;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           background: #1a1a23;
+           border: 1px solid #4a4a5a;
+           border-radius: 4px;
+           cursor: pointer;
+           font-size: 1.2rem;
+           transition: all 0.2s ease;
+       }
+
+       .icon-btn:hover {
+           background: #35354a;
+           transform: scale(1.1);
+       }
+
+       .icon-btn.active {
+           background: #4a4a5a;
+           border-color: #6e6e8a;
+       }
+
+       .toggle-btn {
+           min-width: 24px;
+           height: 24px;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           background: transparent;
+           border: none;
+           cursor: pointer;
+           color: #6e6e8a;
+           font-size: 1.2rem;
+           padding: 0;
+           margin-top: 3px;
+       }
+
+       .toggle-btn:hover {
+           color: #fff;
+       }
+
+       .tree-item-text {
+           flex-grow: 1;
+           min-height: 24px;
+           border: none;
+           background: transparent;
+           color: #e0e0e0;
+           font-size: 0.95rem;
+           padding: 0.25rem 0.5rem;
+           outline: none;
+           resize: none;
+           overflow: hidden;
+           text-align: justify;
+           line-height: 1.5;
+           word-break: break-word;
+           white-space: pre-wrap;
+           font-family: inherit;
+           margin: 0;
+       }
+
+       .tree-item-text:focus {
+           background: rgba(255, 255, 255, 0.05);
+           border-radius: 4px;
+       }
+
+       .tree-item-text::spelling-error {
+           text-decoration: wavy underline #ff4444;
+       }
+
+       .action-buttons {
+           display: flex;
+           gap: 0.3rem;
+           opacity: 0;
+           margin-top: 3px;
+           position: relative;
+       }
+
+       .tree-content:hover .action-buttons {
+           opacity: 1;
+       }
+
+       .action-btn {
+           min-width: 24px;
+           height: 24px;
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           background: transparent;
+           border: 1px solid #2a2a35;
+           border-radius: 4px;
+           color: #6e6e8a;
+           cursor: pointer;
+           font-size: 1.1rem;
+           padding: 0;
+       }
+
+       .action-btn:hover:not(:disabled) {
+           background: #2a2a35;
+           color: #fff;
+       }
+
+       .action-btn:disabled {
+           opacity: 0.3;
+           cursor: not-allowed;
+       }
+
+       .action-btn.active {
+           background: #35354a;
+           color: #fff;
+       }
+
+       .tree-item.expanded > .tree-content > .toggle-btn {
+           transform: rotate(90deg);
+       }
+
+       .child-indicator {
+           position: absolute;
+           right: 12px;
+           top: 50%;
+           transform: translateY(-50%);
+           color: #4a4a5a;
+           font-size: 1.2rem;
+           display: none;
+       }
+
+       .tree-item:not(.expanded) > .tree-content > .child-indicator {
+           display: block;
+       }
+
+       .tree-content:hover > .child-indicator {
+           display: none;
+       }
+
+       .tree-item.focused > .tree-content > .child-indicator {
+           display: none;
+       }
+
+       .item-icon {
+           position: absolute;
+           right: 32px;
+           top: 50%;
+           transform: translateY(-50%);
+           font-size: 1.2rem;
+           pointer-events: none;
+       }
+
+       .tree-content:hover .item-icon {
+           display: none;
+       }
+   </style>
+</head>
+<body>
+   <div class="container">
+       <div class="buttons-container">
+           <button class="control-button" onclick="addNewItem()">＋ Новый элемент</button>
+           <button class="control-button" onclick="exportData()">💾 Экспорт</button>
+           <button class="control-button" onclick="document.getElementById('importInput').click()">📂 Импорт</button>
+           <input type="file" id="importInput" class="import-input" accept=".json" onchange="handleImport(event)">
+       </div>
+       <ul class="tree-list" id="mainList"></ul>
+   </div>
+   <div id="messageModal" class="message-modal"></div>
+
+   <script>
+       const ICONS = ['📌', '⭐', '🔥', '🎯', '⚡', '🔍', '📊', '⚙️'];
+       
+       let items = JSON.parse(localStorage.getItem('treeItems')) || [];
+       let expandedState = JSON.parse(localStorage.getItem('expandedState')) || {};
+       let focusedId = null;
+       let activeIconPanel = null;
+
+       function showMessage(message, duration = 3000) {
+           const modal = document.getElementById('messageModal');
+           modal.textContent = message;
+           modal.classList.add('visible');
+           setTimeout(() => {
+               modal.classList.remove('visible');
+           }, duration);
+       }
+
+       function exportData() {
+           const data = {
+               items: items,
+               expandedState: expandedState
+           };
+           const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+           const url = URL.createObjectURL(blob);
+           const a = document.createElement('a');
+           a.href = url;
+           a.download = 'tree-data.json';
+           document.body.appendChild(a);
+           a.click();
+           document.body.removeChild(a);
+           URL.revokeObjectURL(url);
+           showMessage('Данные успешно экспортированы');
+       }
+
+       function handleImport(event) {
+           const file = event.target.files[0];
+           if (!file) return;
+
+           const reader = new FileReader();
+           reader.onload = (e) => {
+               try {
+                   const data = JSON.parse(e.target.result);
+                   items = data.items || [];
+                   expandedState = data.expandedState || {};
+                   saveToLocalStorage();
+                   renderTree();
+                   showMessage('Данные успешно импортированы');
+               } catch (error) {
+                   showMessage('Ошибка при импорте файла');
+               }
+               event.target.value = ''; // Сброс input для возможности повторного импорта
+           };
+           reader.readAsText(file);
+       }
+
+       /* ... Все остальные существующие функции без изменений ... */
+       
+       function generateId() {
+           return Date.now().toString(36) + Math.random().toString(36).substr(2);
+       }
+
+       function findItemParent(items, id, parent = null) {
+           for (let item of items) {
+               if (item.id === id) return parent;
+               const found = findItemParent(item.children, id, item);
+               if (found) return found;
+           }
+           return null;
+       }
+
+       function findSiblings(items, id) {
+           const parent = findItemParent(items, id);
+           return parent ? parent.children : items;
+       }
+
+       function createIconPanel(item, contentElement) {
+           if (activeIconPanel) {
+               activeIconPanel.remove();
+               activeIconPanel = null;
+           }
+
+           const panel = document.createElement('div');
+           panel.className = 'icon-panel visible';
+           
+           const removeBtn = document.createElement('button');
+           removeBtn.className = 'icon-btn';
+           removeBtn.innerHTML = '❌';
+           removeBtn.onclick = (e) => {
+               e.stopPropagation();
+               item.iconIndex = -1;
+               saveToLocalStorage();
+               renderTree();
+           };
+           panel.appendChild(removeBtn);
+
+           ICONS.forEach((icon, index) => {
+               const btn = document.createElement('button');
+               btn.className = `icon-btn ${item.iconIndex === index ? 'active' : ''}`;
+               btn.innerHTML = icon;
+               btn.onclick = (e) => {
+                   e.stopPropagation();
+                   item.iconIndex = index;
+                   saveToLocalStorage();
+                   renderTree();
+               };
+               panel.appendChild(btn);
+           });
+
+           return panel;
+       }
+
+       function addNewItem(parentId = null) {
+           const newItem = {
+               id: generateId(),
+               text: '',
+               children: [],
+               iconIndex: -1
+           };
+
+           if (parentId) {
+               const parent = findItemById(items, parentId);
+               if (parent) {
+                   parent.children.push(newItem);
+                   expandedState[parentId] = true;
+               }
+           } else {
+               items.push(newItem);
+           }
+
+           focusedId = newItem.id;
+           saveToLocalStorage();
+           renderTree();
+       }
+
+       function findItemById(items, id) {
+           for (let item of items) {
+               if (item.id === id) return item;
+               const found = findItemById(item.children, id);
+               if (found) return found;
+           }
+           return null;
+       }
+
+       function moveItem(id, direction) {
+           const siblings = findSiblings(items, id);
+           const index = siblings.findIndex(item => item.id === id);
+           if (index === -1) return;
+
+           const newIndex = direction === 'up' ? index - 1 : index + 1;
+           if (newIndex >= 0 && newIndex < siblings.length) {
+               const temp = siblings[index];
+               siblings[index] = siblings[newIndex];
+               siblings[newIndex] = temp;
+               saveToLocalStorage();
+               renderTree();
+           }
+       }
+
+       function toggleItem(id, e) {
+           e.stopPropagation();
+           expandedState[id] = !expandedState[id];
+           saveToLocalStorage();
+           renderTree();
+       }
+
+       function updateItemText(id, text) {
+           const item = findItemById(items, id);
+           if (item) {
+               item.text = text;
+               saveToLocalStorage();
+           }
+       }
+
+       function deleteItem(id) {
+           const parent = findItemParent(items, id);
+           const targetArray = parent ? parent.children : items;
+           const index = targetArray.findIndex(item => item.id === id);
+           if (index !== -1) {
+               targetArray.splice(index, 1);
+               saveToLocalStorage();
+               renderTree();
+           }
+       }
+
+       function autoResize(textarea) {
+           textarea.style.height = 'auto';
+           textarea.style.height = textarea.scrollHeight + 'px';
+       }
+
+       function createTreeItem(item) {
+           const li = document.createElement('li');
+           li.className = `tree-item ${expandedState[item.id] ? 'expanded' : ''} ${focusedId === item.id ? 'focused' : ''}`;
+
+           const content = document.createElement('div');
+           content.className = 'tree-content';
+           content.onclick = (e) => {
+               e.stopPropagation();
+               focusedId = item.id;
+               renderTree();
+           };
+
+           const toggleBtn = document.createElement('button');
+           toggleBtn.className = 'toggle-btn';
+           toggleBtn.innerHTML = '▸';
+           toggleBtn.onclick = (e) => toggleItem(item.id, e);
+
+           const textarea = document.createElement('textarea');
+           textarea.className = 'tree-item-text';
+           textarea.value = item.text;
+           textarea.placeholder = 'Введите текст...';
+           textarea.spellcheck = true;
+           textarea.lang = 'ru';
+           textarea.rows = 1;
+           textarea.onclick = (e) => e.stopPropagation();
+           textarea.oninput = (e) => {
+               updateItemText(item.id, e.target.value);
+               autoResize(e.target);
+           };
+
+           if (focusedId === item.id) {
+               setTimeout(() => {
+                   textarea.focus();
+                   autoResize(textarea);
+               }, 0);
+           } else {
+               setTimeout(() => autoResize(textarea), 0);
+           }
+
+           const actions = document.createElement('div');
+           actions.className = 'action-buttons';
+
+           const siblings = findSiblings(items, item.id);
+           const index = siblings.findIndex(i => i.id === item.id);
+
+           const toggleIconBtn = document.createElement('button');
+           toggleIconBtn.className = 'action-btn';
+           toggleIconBtn.innerHTML = '🏷️';
+           toggleIconBtn.onclick = (e) => {
+               e.stopPropagation();
+               const panel = createIconPanel(item, content);
+               content.appendChild(panel);
+               activeIconPanel = panel;
+           };
+
+           const moveUpBtn = document.createElement('button');
+           moveUpBtn.className = 'action-btn';
+           moveUpBtn.innerHTML = '↑';
+           moveUpBtn.disabled = index === 0;
+           moveUpBtn.onclick = (e) => {
+               e.stopPropagation();
+               moveItem(item.id, 'up');
+           };
+
+           const moveDownBtn = document.createElement('button');
+           moveDownBtn.className = 'action-btn';
+           moveDownBtn.innerHTML = '↓';
+           moveDownBtn.disabled = index === siblings.length - 1;
+           moveDownBtn.onclick = (e) => {
+               e.stopPropagation();
+               moveItem(item.id, 'down');
+           };
+
+           const addBtn = document.createElement('button');
+           addBtn.className = 'action-btn';
+           addBtn.innerHTML = '＋';
+           addBtn.onclick = (e) => {
+               e.stopPropagation();
+               addNewItem(item.id);
+           };
+
+           const deleteBtn = document.createElement('button');
+           deleteBtn.className = 'action-btn';
+           deleteBtn.innerHTML = '×';
+           deleteBtn.onclick = (e) => {
+               e.stopPropagation();
+               deleteItem(item.id);
+           };
+
+           actions.appendChild(toggleIconBtn);
+           actions.appendChild(moveUpBtn);
+           actions.appendChild(moveDownBtn);
+           actions.appendChild(addBtn);
+           actions.appendChild(deleteBtn);
+
+           content.appendChild(toggleBtn);
+           content.appendChild(textarea);
+           content.appendChild(actions);
+
+           if (item.iconIndex >= 0) {
+               const icon = document.createElement('span');
+               icon.className = 'item-icon';
+               icon.innerHTML = ICONS[item.iconIndex];
+               content.appendChild(icon);
+           }
+
+           if (item.children && item.children.length > 0) {
+               const indicator = document.createElement('span');
+               indicator.className = 'child-indicator';
+               indicator.innerHTML = '•';
+               content.appendChild(indicator);
+           }
+
+           li.appendChild(content);
+
+           if (item.children && item.children.length > 0) {
+               const ul = document.createElement('ul');
+               ul.className = 'nested tree-list';
+               item.children.forEach(child => {
+                   ul.appendChild(createTreeItem(child));
+               });
+               li.appendChild(ul);
+           }
+
+           return li;
+       }
+
+       function renderTree() {
+           const mainList = document.getElementById('mainList');
+           mainList.innerHTML = '';
+           items.forEach(item => {
+               mainList.appendChild(createTreeItem(item));
+           });
+       }
+
+       function saveToLocalStorage() {
+           localStorage.setItem('treeItems', JSON.stringify(items));
+           localStorage.setItem('expandedState', JSON.stringify(expandedState));
+       }
+
+       document.addEventListener('click', function(e) {
+           if (!e.target.closest('.icon-panel') && !e.target.closest('.action-btn')) {
+               if (activeIconPanel) {
+                   activeIconPanel.remove();
+                   activeIconPanel = null;
+               }
+           }
+           if (!e.target.closest('.tree-content')) {
+               focusedId = null;
+               renderTree();
+           }
+       });
+
+       renderTree();
+   </script>
+</body>
+</html>
